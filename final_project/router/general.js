@@ -1,12 +1,11 @@
 const express = require('express');
-let books = require('./booksdb.js');
+let { fetchBooks } = require('./booksdb.js');
 const { usernameExists } = require('./auth_users.js');
 let isValid = require('./auth_users.js').isValid;
 let users = require('./auth_users.js').users;
-const public_users = express.Router();
-const jwt = require('jsonwebtoken');
+const publicRoutes = express.Router();
 
-public_users.post('/register', (req, res) => {
+publicRoutes.post('/register', (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).send('Username or password is missing');
@@ -22,14 +21,16 @@ public_users.post('/register', (req, res) => {
   return res.sendStatus(201);
 });
 
-// Get the book list available in the shop
-public_users.get('/', function (req, res) {
+/** Get the book list available in the shop  */
+publicRoutes.get('/', async (req, res) => {
+  const books = await fetchBooks();
   return res.send(books);
 });
 
-// Get book details based on ISBN
-public_users.get('/isbn/:isbn', function (req, res) {
+/** Get book details based on ISBN  */
+publicRoutes.get('/isbn/:isbn', async (req, res) => {
   const queryISBN = req.params.isbn;
+  const books = await fetchBooks();
   const matchingBook = books[queryISBN];
   if (matchingBook) {
     return res.send(matchingBook);
@@ -37,9 +38,10 @@ public_users.get('/isbn/:isbn', function (req, res) {
   return res.status(404).send('No book found for that ISBN');
 });
 
-// Get book details based on author
-public_users.get('/author/:author', function (req, res) {
+/** Get book details based on author  */
+publicRoutes.get('/author/:author', async (req, res) => {
   const queryAuthor = req.params.author;
+  const books = await fetchBooks();
   let matchingBooks = [];
   Object.keys(books).forEach((isbn) => {
     if (books[isbn].author === queryAuthor) {
@@ -52,9 +54,10 @@ public_users.get('/author/:author', function (req, res) {
   return res.status(404).send('No book found for that author');
 });
 
-// Get all books based on title
-public_users.get('/title/:title', function (req, res) {
+/** Get all books based on title  */
+publicRoutes.get('/title/:title', async (req, res) => {
   const queryTitle = req.params.title;
+  const books = await fetchBooks();
   let matchingBooks = [];
   Object.keys(books).forEach((isbn) => {
     if (books[isbn].title === queryTitle) {
@@ -67,9 +70,10 @@ public_users.get('/title/:title', function (req, res) {
   return res.status(404).send('No book found for that title');
 });
 
-//  Get book review
-public_users.get('/review/:isbn', function (req, res) {
+/** Get book review  */
+publicRoutes.get('/review/:isbn', async (req, res) => {
   const queryISBN = req.params.isbn;
+  const books = await fetchBooks();
   const matchingBook = books[queryISBN];
   if (matchingBook) {
     return res.send(matchingBook.reviews);
@@ -77,4 +81,4 @@ public_users.get('/review/:isbn', function (req, res) {
   return res.status(404).send('No book found for that ISBN');
 });
 
-module.exports.general = public_users;
+module.exports.publicRoutes = publicRoutes;

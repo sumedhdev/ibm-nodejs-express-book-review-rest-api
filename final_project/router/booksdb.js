@@ -19,4 +19,10 @@ let books = {
   },
 };
 
-module.exports = books;
+/**
+ * Simulates an async call to fetch books.
+ * Returns a promise that resolves to the books object.
+ */
+const fetchBooks = () => new Promise((resolve) => resolve(books));
+
+module.exports = { books, fetchBooks };
